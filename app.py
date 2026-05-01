@@ -8,8 +8,12 @@
 """
 import os, sys
 
-os.environ.setdefault("STREAMLIT_HOME", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".streamlit"))
-os.makedirs(os.environ["STREAMLIT_HOME"], exist_ok=True)
+try:
+    _home = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".streamlit")
+    os.environ.setdefault("STREAMLIT_HOME", _home)
+    os.makedirs(_home, exist_ok=True)
+except (OSError, PermissionError):
+    pass
 
 import streamlit as st
 
