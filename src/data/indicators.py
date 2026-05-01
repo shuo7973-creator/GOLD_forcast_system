@@ -1,0 +1,223 @@
+"""
+指标定义 & 元数据
+=================
+所有宏观指标的 ID、名称、来源、更新频率。
+"""
+from typing import Dict, List
+
+INDICATOR_META: Dict[str, Dict] = {
+    "gdp_yoy": {
+        "id": "gdp_yoy",
+        "name": "GDP 同比增速",
+        "unit": "%",
+        "source": "BEA",
+        "frequency": "季度",
+        "category": "growth",
+        "model": "merrill_lynch",
+        "subcategory": "growth",
+    },
+    "industrial_production_yoy": {
+        "id": "industrial_production_yoy",
+        "name": "工业增加值同比",
+        "unit": "%",
+        "source": "美联储",
+        "frequency": "月度",
+        "category": "growth",
+        "model": "merrill_lynch",
+        "subcategory": "growth",
+    },
+    "oecd_cli": {
+        "id": "oecd_cli",
+        "name": "OECD 综合领先指标",
+        "unit": "指数",
+        "source": "OECD",
+        "frequency": "月度",
+        "category": "growth",
+        "model": "merrill_lynch",
+        "subcategory": "growth",
+    },
+    "ism_pmi": {
+        "id": "ism_pmi",
+        "name": "ISM 制造业 PMI",
+        "unit": "指数",
+        "source": "ISM",
+        "frequency": "月度",
+        "category": "growth",
+        "model": "both",
+        "subcategory": "growth",
+    },
+    "cpi_yoy": {
+        "id": "cpi_yoy",
+        "name": "CPI 同比",
+        "unit": "%",
+        "source": "BLS",
+        "frequency": "月度",
+        "category": "inflation",
+        "model": "merrill_lynch",
+        "subcategory": "inflation",
+    },
+    "core_pce_yoy": {
+        "id": "core_pce_yoy",
+        "name": "核心 PCE 同比",
+        "unit": "%",
+        "source": "BEA",
+        "frequency": "月度",
+        "category": "inflation",
+        "model": "merrill_lynch",
+        "subcategory": "inflation",
+    },
+    "ppi_yoy": {
+        "id": "ppi_yoy",
+        "name": "PPI 同比",
+        "unit": "%",
+        "source": "BLS",
+        "frequency": "月度",
+        "category": "inflation",
+        "model": "merrill_lynch",
+        "subcategory": "inflation",
+    },
+    "employment_cost_index": {
+        "id": "employment_cost_index",
+        "name": "雇佣成本指数 (ECI)",
+        "unit": "%",
+        "source": "BLS",
+        "frequency": "季度",
+        "category": "inflation",
+        "model": "merrill_lynch",
+        "subcategory": "inflation",
+    },
+    "fed_funds_rate": {
+        "id": "fed_funds_rate",
+        "name": "联邦基金利率",
+        "unit": "%",
+        "source": "美联储",
+        "frequency": "实时",
+        "category": "monetary",
+        "model": "dollar_tide",
+        "subcategory": "fed_policy",
+    },
+    "fed_balance_sheet": {
+        "id": "fed_balance_sheet",
+        "name": "美联储资产负债表",
+        "unit": "万亿美元",
+        "source": "美联储",
+        "frequency": "周度",
+        "category": "monetary",
+        "model": "dollar_tide",
+        "subcategory": "fed_policy",
+    },
+    "real_rate": {
+        "id": "real_rate",
+        "name": "实际利率 (TIPS 10Y)",
+        "unit": "%",
+        "source": "FRED",
+        "frequency": "日度",
+        "category": "monetary",
+        "model": "dollar_tide",
+        "subcategory": "fed_policy",
+    },
+    "fed_dot_plot": {
+        "id": "fed_dot_plot",
+        "name": "点阵图中位数预期",
+        "unit": "bps",
+        "source": "美联储",
+        "frequency": "季度",
+        "category": "monetary",
+        "model": "dollar_tide",
+        "subcategory": "fed_policy",
+    },
+    "gdp_now": {
+        "id": "gdp_now",
+        "name": "GDPNow 预测",
+        "unit": "%",
+        "source": "亚特兰大联储",
+        "frequency": "实时更新",
+        "category": "growth",
+        "model": "dollar_tide",
+        "subcategory": "us_strength",
+    },
+    "nonfarm_payrolls": {
+        "id": "nonfarm_payrolls",
+        "name": "非农就业",
+        "unit": "万人",
+        "source": "BLS",
+        "frequency": "月度",
+        "category": "employment",
+        "model": "dollar_tide",
+        "subcategory": "us_strength",
+    },
+    "retail_sales": {
+        "id": "retail_sales",
+        "name": "零售销售环比",
+        "unit": "%",
+        "source": "人口普查局",
+        "frequency": "月度",
+        "category": "consumption",
+        "model": "dollar_tide",
+        "subcategory": "us_strength",
+    },
+    "us10y_yield": {
+        "id": "us10y_yield",
+        "name": "美债 10Y 收益率",
+        "unit": "%",
+        "source": "UST",
+        "frequency": "日度",
+        "category": "rates",
+        "model": "dollar_tide",
+        "subcategory": "global_risk",
+    },
+    "us2y_yield": {
+        "id": "us2y_yield",
+        "name": "美债 2Y 收益率",
+        "unit": "%",
+        "source": "UST",
+        "frequency": "日度",
+        "category": "rates",
+        "model": "dollar_tide",
+        "subcategory": "global_risk",
+    },
+    "yield_curve": {
+        "id": "yield_curve",
+        "name": "收益率曲线 (10Y-2Y)",
+        "unit": "bp",
+        "source": "UST",
+        "frequency": "日度",
+        "category": "rates",
+        "model": "dollar_tide",
+        "subcategory": "global_risk",
+    },
+    "ted_spread": {
+        "id": "ted_spread",
+        "name": "TED 利差",
+        "unit": "bp",
+        "source": "FRED",
+        "frequency": "日度",
+        "category": "risk",
+        "model": "dollar_tide",
+        "subcategory": "global_risk",
+    },
+    "dxy": {
+        "id": "dxy",
+        "name": "美元指数 (DXY)",
+        "unit": "指数",
+        "source": "ICE",
+        "frequency": "日度",
+        "category": "fx",
+        "model": "dollar_tide",
+        "subcategory": "global_risk",
+    },
+}
+
+
+def get_indicators_by_model(model: str) -> List[Dict]:
+    """按模型筛选指标列表"""
+    result = []
+    for key, meta in INDICATOR_META.items():
+        if meta["model"] == model or meta["model"] == "both":
+            result.append({"id": key, **meta})
+    return result
+
+
+def get_indicator_ids() -> List[str]:
+    """获取所有指标 ID"""
+    return list(INDICATOR_META.keys())
