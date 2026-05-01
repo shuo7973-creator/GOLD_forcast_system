@@ -1,152 +1,109 @@
 """
 全景仪表盘 — 页面编排
 ======================
-组合所有 UI 模块，形成四大板块：
-1. 全景仪表盘 (核心结论 + 雷达图)
-2. 动态周期图 (美林时钟 + 美元潮汐)
-3. 资产红绿灯 (大类资产配置)
-4. 底层数据清单 (指标数值表)
+伦敦暗色艺术风格 · 极简布局
+四大板块：全景 / 周期图 / 红绿灯 / 数据表
 """
 import streamlit as st
 from typing import Dict
-from .charts import (
-    radar_chart,
-    merrill_lynch_quadrant,
-    cycle_probability_bars,
-    dollar_tide_gauge,
-)
-from .components import (
-    cycle_badge,
-    asset_traffic_lights,
-    data_table,
-    dollar_phase_badge,
-)
+from .charts import radar_chart, merrill_lynch_quadrant, cycle_probability_bars, dollar_tide_gauge
+from .components import cycle_badge, asset_traffic_lights, data_table, dollar_phase_badge
+
+GOLD = "#c8a45c"
+TEXT = "#e8e4d9"
+TEXT_DIM = "#8a8578"
+GREEN_SAGE = "#7d9a5e"
+RED_MUTED = "#b55a4e"
+AMBER = "#c4954a"
 
 
 def render_dashboard(analysis: Dict) -> None:
-    """渲染完整仪表盘"""
     ml = analysis["merrill_lynch"]
     dt = analysis["dollar_tide"]
     probs = analysis["cycle_probabilities"]
     dominant = analysis["dominant_cycle"]
     phase = analysis["dollar_phase"]
 
-    st.title("📊 宏观经济周期研判看板")
-    st.caption(f"基于美林时钟 & 美元潮汐双模型 · 实时量化研判")
+    st.title("Macro Cycle · Dashboard")
+    st.caption("Merrill Lynch Clock & Dollar Tide · Real-time Quantitative Assessment")
 
-    # ========== Tab 1: 全景仪表盘 ==========
     tab1, tab2, tab3, tab4 = st.tabs([
-        "🎯 全景仪表盘",
-        "🔄 动态周期图",
-        "🚦 资产红绿灯",
-        "📋 底层数据清单",
+        "Overview",
+        "Cycle Map",
+        "Allocations",
+        "Data",
     ])
 
+    # ── Tab 1: Overview ──
     with tab1:
-        col_left, col_right = st.columns([0.38, 0.62])
+        left, right = st.columns([0.34, 0.66])
 
-        with col_left:
+        with left:
             cycle_badge(dominant)
-
-            st.markdown("---")
-
-            st.markdown("### 🏦 美元潮汐阶段")
             dollar_phase_badge(phase)
 
             st.markdown("---")
+            st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:10px;'>Key Scores</div>", unsafe_allow_html=True)
+            m1, m2 = st.columns(2)
+            m1.metric("经济增长", f"{ml['growth_score']}")
+            m2.metric("通胀压力", f"{ml['inflation_score']}")
+            m3, m4 = st.columns(2)
+            m3.metric("美联储", f"{dt['fed_policy_score']}")
+            m4.metric("风险偏好", f"{100 - dt['global_risk_score']}")
 
-            st.markdown("### 📈 核心指标得分")
-            metric_cols = st.columns(2)
-            with metric_cols[0]:
-                st.metric("经济增长因子", f"{ml['growth_score']}", help="0-100, 越高增长越强")
-            with metric_cols[1]:
-                st.metric("通胀压力因子", f"{ml['inflation_score']}", help="0-100, 越高通胀越强")
-            metric_cols2 = st.columns(2)
-            with metric_cols2[0]:
-                st.metric("美联储政策", f"{dt['fed_policy_score']}", help="高=鹰派, 低=鸽派")
-            with metric_cols2[1]:
-                st.metric("全球风险偏好", f"{100 - dt['global_risk_score']}", help="高=Risk On, 低=Risk Off")
+        with right:
+            st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:6px;'>Dimension Radar</div>", unsafe_allow_html=True)
+            st.plotly_chart(radar_chart(analysis), width="stretch", config={"displayModeBar": False})
 
-            st.caption(dominant.get("description", ""))
-
-        with col_right:
-            st.markdown("### 🎯 经济维度雷达图")
-            st.plotly_chart(radar_chart(analysis), width="stretch")
-
-    # ========== Tab 2: 动态周期图 ==========
+    # ── Tab 2: Cycle Map ──
     with tab2:
-        st.markdown("### 🔄 美林时钟 — 当前周期位置")
-        st.caption("横轴=经济增长因子 | 纵轴=通货膨胀因子 | 圆点=当前经济位置")
+        st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:10px;'>Merrill Lynch Clock — Current Position</div>", unsafe_allow_html=True)
 
-        col_quad, col_bars = st.columns([0.55, 0.45])
-
-        with col_quad:
-            fig_quad = merrill_lynch_quadrant(
-                ml["growth_score"], ml["inflation_score"], probs
-            )
-            st.plotly_chart(fig_quad, width="stretch")
-
-        with col_bars:
-            st.markdown("#### 各周期匹配度概率")
-            fig_bars = cycle_probability_bars(probs)
-            st.plotly_chart(fig_bars, width="stretch")
+        ql, qr = st.columns([0.55, 0.45])
+        with ql:
+            st.plotly_chart(merrill_lynch_quadrant(ml["growth_score"], ml["inflation_score"], probs),
+                            width="stretch", config={"displayModeBar": False})
+        with qr:
+            st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.12em;color:{TEXT_DIM};margin-bottom:6px;'>PROBABILITY</div>", unsafe_allow_html=True)
+            st.plotly_chart(cycle_probability_bars(probs), width="stretch", config={"displayModeBar": False})
 
         st.markdown("---")
-        st.markdown("### 🌊 美元潮汐 — 三大维度仪表盘")
-        fig_gauge = dollar_tide_gauge(
-            dt["fed_policy_score"],
-            dt["us_strength_score"],
-            dt["global_risk_score"],
-        )
-        st.plotly_chart(fig_gauge, width="stretch")
+        st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:10px;'>Dollar Tide · Gauge</div>", unsafe_allow_html=True)
+        st.plotly_chart(dollar_tide_gauge(dt["fed_policy_score"], dt["us_strength_score"], dt["global_risk_score"]),
+                        width="stretch", config={"displayModeBar": False})
 
-    # ========== Tab 3: 资产红绿灯 ==========
+    # ── Tab 3: Allocations ──
     with tab3:
-        st.markdown("### 🚦 大类资产配置建议")
-        st.caption("基于当前经济周期的量化研判，仅供参考，不构成投资建议。")
+        st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:10px;'>Asset Allocation · Traffic Light</div>", unsafe_allow_html=True)
 
         asset_signals = dominant.get("asset_signals", {})
         asset_traffic_lights(asset_signals)
 
         st.markdown("---")
-        st.markdown("#### 📖 信号说明")
-        signal_cols = st.columns(3)
-        with signal_cols[0]:
-            st.markdown(
-                """
-                <div style="text-align:center; padding:10px; background:#27AE6020; border-radius:8px;">
-                <span style="font-size:20px;">🟢 利好</span><br>
-                <small>周期有利，建议超配</small>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with signal_cols[1]:
-            st.markdown(
-                """
-                <div style="text-align:center; padding:10px; background:#F39C1220; border-radius:8px;">
-                <span style="font-size:20px;">🟡 中性</span><br>
-                <small>标准配置，观望为主</small>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with signal_cols[2]:
-            st.markdown(
-                """
-                <div style="text-align:center; padding:10px; background:#E74C3C20; border-radius:8px;">
-                <span style="font-size:20px;">🔴 利空</span><br>
-                <small>周期不利，建议低配</small>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        c1, c2, c3 = st.columns(3)
+        c1.markdown(
+            f"""<div style="padding:12px 10px;text-align:center;background:{GREEN_SAGE}0a;border:1px solid {GREEN_SAGE}22;border-radius:3px;">
+            <span style="font-size:1.2rem;color:{GREEN_SAGE};">▲ LONG</span><br>
+            <span style="font-size:0.7rem;color:{TEXT_DIM};">周期有利 · 建议超配</span></div>""",
+            unsafe_allow_html=True,
+        )
+        c2.markdown(
+            f"""<div style="padding:12px 10px;text-align:center;background:{AMBER}0a;border:1px solid {AMBER}22;border-radius:3px;">
+            <span style="font-size:1.2rem;color:{AMBER};">■ NEUTRAL</span><br>
+            <span style="font-size:0.7rem;color:{TEXT_DIM};">标准配置 · 观望为主</span></div>""",
+            unsafe_allow_html=True,
+        )
+        c3.markdown(
+            f"""<div style="padding:12px 10px;text-align:center;background:{RED_MUTED}0a;border:1px solid {RED_MUTED}22;border-radius:3px;">
+            <span style="font-size:1.2rem;color:{RED_MUTED};">▼ SHORT</span><br>
+            <span style="font-size:0.7rem;color:{TEXT_DIM};">周期不利 · 建议低配</span></div>""",
+            unsafe_allow_html=True,
+        )
 
-        st.markdown(f"#### 📝 当前研判逻辑")
-        st.info(dominant.get("description", "—"))
+        st.markdown("---")
+        st.markdown(f"<div style='color:{TEXT_DIM};font-size:0.85rem;font-style:italic;'>{dominant.get('description', '')}</div>", unsafe_allow_html=True)
 
-    # ========== Tab 4: 底层数据清单 ==========
+    # ── Tab 4: Data ──
     with tab4:
-        st.markdown("### 📋 关键指标数据清单")
-        st.caption("预警: 🔴=偏高(>70分)  🟡=中性  🟢=偏低(<30分)")
+        st.markdown(f"<div style='font-size:0.7rem;letter-spacing:0.16em;color:{TEXT_DIM};text-transform:uppercase;margin-bottom:10px;'>Indicator Data</div>", unsafe_allow_html=True)
         data_table(analysis)

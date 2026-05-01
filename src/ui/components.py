@@ -1,42 +1,85 @@
 """
 UI 组件模块
 ===========
-资产红绿灯、数据清单表格、周期标签等可复用组件。
+周期徽章 / 资产红绿灯 / 数据清单 / 美元阶段
+伦敦艺术风格 · 深色主题
 """
 import streamlit as st
 import pandas as pd
 from typing import Dict
-from config import (
-    CYCLE_DEFINITIONS,
-    DOLLAR_PHASES,
-    ASSET_CLASSES,
-)
+from config import CYCLE_DEFINITIONS, DOLLAR_PHASES, ASSET_CLASSES
+
+GOLD = "#c8a45c"
+CARD_BG = "#1a1a1a"
+DARK_BG = "#111111"
+TEXT = "#e8e4d9"
+TEXT_DIM = "#8a8578"
+BORDER = "#2a2a2a"
+GREEN = "#7d9a5e"
+RED = "#b55a4e"
+AMBER = "#c4954a"
 
 
-def cycle_badge(dominant_cycle: Dict) -> None:
-    """主周期判定徽章"""
-    color = dominant_cycle.get("color", "#95A5A6")
-    prob = dominant_cycle.get("probability", 50)
-    name = dominant_cycle.get("name", "未知")
+def _card(inner: str, accent: str = BORDER) -> str:
+    return f"""
+    <div style="
+        background: {CARD_BG};
+        border: 1px solid {accent};
+        border-radius: 3px;
+        padding: 20px 24px;
+        margin: 12px 0;
+    ">{inner}</div>"""
+
+
+def cycle_badge(dominant: Dict) -> None:
+    color = dominant.get("color", TEXT_DIM)
+    prob = dominant.get("probability", 50)
+    name = dominant.get("name", "—")
+    key = dominant.get("key", "")
+
+    key_label = {"recovery": "RECOVERY", "overheat": "OVERHEAT",
+                 "stagflation": "STAGFLATION", "recession": "RECESSION"}.get(key, "")
 
     st.markdown(
         f"""
         <div style="
-            background: linear-gradient(135deg, {color}22, {color}44);
-            border: 2px solid {color};
-            border-radius: 16px;
-            padding: 24px 20px;
-            text-align: center;
-            margin: 10px 0;
+            background: {CARD_BG};
+            border-left: 3px solid {color};
+            border-radius: 2px;
+            padding: 28px 32px;
+            margin: 12px 0;
         ">
-            <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 4px;">
-                当前经济周期研判
-            </div>
-            <div style="font-size: 36px; font-weight: 800; color: {color}; letter-spacing: 2px;">
-                {name}
-            </div>
-            <div style="font-size: 16px; color: {color}; margin-top: 6px;">
-                置信度 {prob}%
+            <div style="
+                font-size: 0.7rem;
+                letter-spacing: 0.22em;
+                color: {TEXT_DIM};
+                margin-bottom: 12px;
+                text-transform: uppercase;
+            ">当前周期研判 · {key_label}</div>
+            <div style="
+                font-family: 'Playfair Display', serif;
+                font-size: 3rem;
+                font-weight: 600;
+                color: {color};
+                letter-spacing: 0.04em;
+                line-height: 1.1;
+            ">{name}</div>
+            <div style="
+                display: flex;
+                align-items: baseline;
+                gap: 6px;
+                margin-top: 10px;
+            ">
+                <span style="
+                    font-family: 'Playfair Display', serif;
+                    font-size: 2rem;
+                    color: {GOLD};
+                ">{prob}%</span>
+                <span style="
+                    font-size: 0.8rem;
+                    color: {TEXT_DIM};
+                    letter-spacing: 0.08em;
+                ">CONFIDENCE</span>
             </div>
         </div>
         """,
@@ -44,34 +87,100 @@ def cycle_badge(dominant_cycle: Dict) -> None:
     )
 
 
+def dollar_phase_badge(phase: Dict) -> None:
+    color = phase.get("color", TEXT_DIM)
+    name = phase.get("name", "—")
+    key = phase.get("key", "")
+    composite = phase.get("composite_score", 50)
+    desc = phase.get("description", "")
+
+    emoji = {"tightening": "HAWKISH", "easing": "DOVISH", "plateau": "NEUTRAL"}.get(key, "")
+
+    st.markdown(
+        f"""
+        <div style="
+            background: {CARD_BG};
+            border: 1px solid {BORDER};
+            border-radius: 3px;
+            padding: 20px 24px;
+            margin: 12px 0;
+        ">
+            <div style="
+                font-size: 0.7rem;
+                letter-spacing: 0.22em;
+                color: {TEXT_DIM};
+                margin-bottom: 8px;
+                text-transform: uppercase;
+            ">美元潮汐 · {emoji}</div>
+            <div style="
+                font-size: 1.3rem;
+                font-weight: 500;
+                color: {color};
+                letter-spacing: 0.04em;
+            ">美元{name}</div>
+            <div style="
+                margin-top: 10px;
+                height: 3px;
+                background: {BORDER};
+                border-radius: 2px;
+                overflow: hidden;
+            ">
+                <div style="
+                    width: {composite}%;
+                    height: 100%;
+                    background: {color};
+                    border-radius: 2px;
+                "></div>
+            </div>
+            <div style="
+                font-size: 0.75rem;
+                color: {TEXT_DIM};
+                margin-top: 6px;
+                font-style: italic;
+            ">{desc}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def asset_traffic_lights(asset_signals: Dict[str, str]) -> None:
-    """资产配置红绿灯"""
-    signal_map = {
-        "green": ("🟢 利好", "#27AE60"),
-        "red": ("🔴 利空", "#E74C3C"),
-        "yellow": ("🟡 中性", "#F39C12"),
+    signal_config = {
+        "green": ("LONG", GREEN),
+        "red": ("SHORT", RED),
+        "yellow": ("NEUTRAL", AMBER),
     }
 
     cols = st.columns(len(asset_signals))
     for i, (asset_key, signal) in enumerate(asset_signals.items()):
-        label, color = signal_map.get(signal, ("⚪ 未知", "#95A5A6"))
+        label, color = signal_config.get(signal, ("—", TEXT_DIM))
         asset_name = ASSET_CLASSES.get(asset_key, asset_key)
+
+        _icon = {"green": "▲", "red": "▼", "yellow": "■"}.get(signal, "—")
+
         with cols[i]:
             st.markdown(
                 f"""
                 <div style="
-                    background: {color}15;
-                    border: 1.5px solid {color}55;
-                    border-radius: 12px;
-                    padding: 14px 8px;
+                    background: {CARD_BG};
+                    border: 1px solid {BORDER};
+                    border-radius: 3px;
+                    padding: 18px 12px;
                     text-align: center;
                 ">
-                    <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 6px;">
-                        {asset_name}
-                    </div>
-                    <div style="font-size: 18px; font-weight: 700; color: {color};">
-                        {label}
-                    </div>
+                    <div style="
+                        font-size: 0.7rem;
+                        letter-spacing: 0.1em;
+                        color: {TEXT_DIM};
+                        margin-bottom: 8px;
+                        text-transform: uppercase;
+                    ">{asset_name}</div>
+                    <div style="
+                        font-family: 'Playfair Display', serif;
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: {color};
+                    ">{_icon} {label}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -79,7 +188,6 @@ def asset_traffic_lights(asset_signals: Dict[str, str]) -> None:
 
 
 def data_table(analysis: Dict) -> None:
-    """底层数据清单 — 关键指标数值及预警信号"""
     indicators = analysis.get("indicators", {})
     ml = analysis.get("merrill_lynch", {})
     dt = analysis.get("dollar_tide", {})
@@ -94,30 +202,25 @@ def data_table(analysis: Dict) -> None:
 
     rows = []
     for key, info in indicators.items():
-        value = info.get("value", "-")
-        prev = info.get("prev_value", "-")
-        trend_icon = "🔺" if info.get("trend") == "up" else ("🔻" if info.get("trend") == "down" else "➖")
-        score = all_scores.get(key, "-")
+        value = info.get("value", "—")
+        prev = info.get("prev_value", "—")
+        trend_sym = "↑" if info.get("trend") == "up" else ("↓" if info.get("trend") == "down" else "→")
+        score = all_scores.get(key, "—")
         signal = info.get("signal", "")
 
-        if score != "-" and isinstance(score, (int, float)):
-            if score > 70:
-                alert = "🔴"
-            elif score < 30:
-                alert = "🟢"
-            else:
-                alert = "🟡"
+        if score != "—" and isinstance(score, (int, float)):
+            alert = "▲" if score > 70 else ("▼" if score < 30 else "■")
         else:
-            alert = "➖"
+            alert = "—"
 
         rows.append({
-            "预警": alert,
-            "指标": key,
-            "当前值": f"{value}",
+            "": alert,
+            "指标名称": key,
+            "当前": f"{value}",
             "前值": f"{prev}",
-            "趋势": trend_icon,
-            "标准得分": f"{score}" if score != "-" else "-",
-            "信号解读": signal,
+            "趋势": trend_sym,
+            "得分": f"{score}" if score != "—" else "—",
+            "信号": signal,
         })
 
     df = pd.DataFrame(rows)
@@ -125,53 +228,4 @@ def data_table(analysis: Dict) -> None:
         df,
         width="stretch",
         hide_index=True,
-        column_config={
-            "预警": st.column_config.TextColumn(width="small"),
-            "指标": st.column_config.TextColumn(width="medium"),
-            "当前值": st.column_config.TextColumn(width="small"),
-            "前值": st.column_config.TextColumn(width="small"),
-            "趋势": st.column_config.TextColumn(width="small"),
-            "标准得分": st.column_config.TextColumn(width="small"),
-            "信号解读": st.column_config.TextColumn(width="large"),
-        },
-    )
-
-
-def dollar_phase_badge(phase: Dict) -> None:
-    """美元周期阶段徽章"""
-    color = phase.get("color", "#95A5A6")
-    name = phase.get("name", "未知")
-    emoji = {
-        "tightening": "🦅",
-        "easing": "🕊️",
-        "plateau": "⏸️",
-    }.get(phase.get("key", ""), "❓")
-    signal_map = {
-        "red": ("新兴市场承压", "#E74C3C"),
-        "green": ("新兴市场利好", "#27AE60"),
-        "yellow": ("新兴市场中性", "#F39C12"),
-    }
-    em_signal = phase.get("em_signal", "yellow")
-    em_label, em_color = signal_map.get(em_signal, ("", "#95A5A6"))
-
-    st.markdown(
-        f"""
-        <div style="
-            background: {color}15;
-            border: 1.5px solid {color}55;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            margin: 8px 0;
-        ">
-            <div style="font-size: 28px; margin-bottom: 4px;">{emoji}</div>
-            <div style="font-size: 18px; font-weight: 700; color: {color};">
-                美元{name}
-            </div>
-            <div style="font-size: 13px; color: {em_color}; margin-top: 4px;">
-                {em_label}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
     )
