@@ -66,4 +66,4 @@ site-packages/
 # =================================
 # Streamlit
 # =================================
-.streamlit/secrets.toml
+.streamlit/

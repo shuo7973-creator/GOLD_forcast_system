@@ -6,6 +6,11 @@
 运行方式:
     streamlit run app.py
 """
+import os, sys
+
+os.environ.setdefault("STREAMLIT_HOME", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".streamlit"))
+os.makedirs(os.environ["STREAMLIT_HOME"], exist_ok=True)
+
 import streamlit as st
 
 st.set_page_config(
